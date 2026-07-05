@@ -1,0 +1,494 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SZ Meter — instrument concept</title>
+<style>
+  :root {
+    --bg:#EEF2F1; --surface:#FFFFFF; --surface-2:#F4F7F6; --ink:#14201E; --ink-soft:#33433F;
+    --muted:#5A6B67; --line:#DBE3E1;
+    --brand:#0E8C86; --brand-strong:#0B6E69; --brand-wash:#E3F0EE;
+    --sz:#5B54C9; --sz-wash:#ECEBFA;
+    --bd:#BE8218; --bd-wash:#F7ECD3;
+    --nc:#2E9E6B; --nc-wash:#E1F1E8;
+    --shadow:0 1px 2px rgba(20,32,30,.05), 0 10px 26px -14px rgba(20,32,30,.20);
+    --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0C1211; --surface:#131E1C; --surface-2:#17231F; --ink:#E7EEEC; --ink-soft:#C4D0CD;
+      --muted:#8FA09B; --line:#233230;
+      --brand:#35B7AE; --brand-strong:#5DD2C9; --brand-wash:#123430;
+      --sz:#938CF0; --sz-wash:#1E1B3A;
+      --bd:#E0B24E; --bd-wash:#332811;
+      --nc:#47C489; --nc-wash:#123326;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="light"]{--bg:#EEF2F1;--surface:#FFFFFF;--surface-2:#F4F7F6;--ink:#14201E;--ink-soft:#33433F;--muted:#5A6B67;--line:#DBE3E1;--brand:#0E8C86;--brand-strong:#0B6E69;--brand-wash:#E3F0EE;--sz:#5B54C9;--sz-wash:#ECEBFA;--bd:#BE8218;--bd-wash:#F7ECD3;--nc:#2E9E6B;--nc-wash:#E1F1E8;--shadow:0 1px 2px rgba(20,32,30,.05),0 10px 26px -14px rgba(20,32,30,.20);}
+  :root[data-theme="dark"]{--bg:#0C1211;--surface:#131E1C;--surface-2:#17231F;--ink:#E7EEEC;--ink-soft:#C4D0CD;--muted:#8FA09B;--line:#233230;--brand:#35B7AE;--brand-strong:#5DD2C9;--brand-wash:#123430;--sz:#938CF0;--sz-wash:#1E1B3A;--bd:#E0B24E;--bd-wash:#332811;--nc:#47C489;--nc-wash:#123326;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -16px rgba(0,0,0,.7);}
+
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1060px; margin:0 auto; padding:26px 20px 64px; }
+
+  /* ---- brand lockup ---- */
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .lockup { display:flex; align-items:center; gap:13px; }
+  .mark { width:44px; height:44px; border-radius:12px; flex:none; background:var(--ink); display:grid; place-items:center; box-shadow:var(--shadow); }
+  @media (prefers-color-scheme: dark){ .mark{ background:#0A100F; } }
+  :root[data-theme="dark"] .mark{ background:#0A100F; }
+  .mark svg { width:28px; height:28px; }
+  .wordmark .name { font-size:21px; font-weight:680; letter-spacing:-.015em; line-height:1; }
+  .wordmark .name .t { font-weight:400; color:var(--muted); }
+  .wordmark .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--brand-strong); margin-top:5px; }
+  .theme-toggle { font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; background:var(--surface); color:var(--muted); border:1px solid var(--line); padding:7px 12px; border-radius:8px; cursor:pointer; }
+  .theme-toggle:hover { color:var(--ink); border-color:var(--brand); }
+  .topbar-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .nav-link { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; background:var(--surface); color:var(--muted); border:1px solid var(--line); padding:7px 12px; border-radius:8px; white-space:nowrap; }
+  .nav-link:hover { color:var(--ink); border-color:var(--brand); }
+
+
+  .hero { margin:24px 0 18px; }
+  .hero h1 { font-size:clamp(21px,3vw,30px); letter-spacing:-.02em; margin:0 0 9px; max-width:24ch; text-wrap:balance; line-height:1.12; }
+  .hero p { margin:0; max-width:62ch; color:var(--ink-soft); font-size:15px; }
+  .hero p b { color:var(--ink); font-weight:600; }
+
+  /* ---- instrument stage ---- */
+  .stage { margin-top:22px; background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; }
+  .stage-head { display:flex; align-items:center; gap:10px; padding:13px 20px; border-bottom:1px solid var(--line); background:var(--surface-2); }
+  .stage-head h2 { margin:0; font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; }
+  .specimen { margin-left:auto; font-family:var(--mono); font-size:11px; letter-spacing:.03em; color:var(--muted); display:flex; align-items:center; gap:7px; }
+  .specimen .dot { width:7px; height:7px; border-radius:50%; background:var(--brand); box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent); }
+
+  .dial-body { padding:26px 20px 22px; display:grid; grid-template-columns:1.15fr .85fr; gap:26px; align-items:center; }
+  @media (max-width:780px){ .dial-body { grid-template-columns:1fr; gap:20px; } }
+
+  .gauge-col { position:relative; }
+  .gauge-holder { position:relative; width:100%; max-width:420px; margin:0 auto; aspect-ratio:1 / .62; }
+  .gauge-holder canvas { width:100%; height:100%; display:block; }
+  .gauge-read { position:absolute; left:0; right:0; bottom:6%; text-align:center; pointer-events:none; }
+  .gauge-read .val { font-family:var(--mono); font-size:clamp(38px,8vw,58px); font-weight:650; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; }
+  .gauge-read .val .pct { font-size:.45em; color:var(--muted); margin-left:1px; }
+  .gauge-read .cap { font-family:var(--mono); font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+  .band-pill { display:inline-flex; align-items:center; gap:7px; margin-top:11px; font-size:12.5px; font-weight:600; padding:5px 13px; border-radius:999px; border:1px solid; }
+  .band-pill .bdot { width:9px; height:9px; border-radius:50%; }
+
+  /* readout side */
+  .readout h3 { font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 11px; }
+  .breakdown { display:flex; flex-direction:column; gap:12px; margin-bottom:20px; }
+  .brow .top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; }
+  .brow .nm { font-size:13px; font-weight:600; display:flex; align-items:center; gap:7px; }
+  .brow .nm .cd { width:9px; height:9px; border-radius:50%; }
+  .brow .pv { font-family:var(--mono); font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .brow .track { height:8px; background:var(--surface-2); border-radius:5px; overflow:hidden; }
+  .brow .fill { height:100%; width:0; border-radius:5px; transition:width .7s cubic-bezier(.2,.7,.2,1); }
+
+  .presets { display:flex; flex-wrap:wrap; gap:8px; }
+  .presets .lbl { flex-basis:100%; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:1px; }
+  .preset { font-family:var(--mono); font-size:11.5px; letter-spacing:.01em; background:var(--surface-2); color:var(--muted); border:1px solid var(--line); padding:7px 12px; border-radius:999px; cursor:pointer; transition:.12s; }
+  .preset:hover { color:var(--ink); border-color:var(--brand); }
+  .preset[aria-pressed="true"] { background:var(--brand-wash); color:var(--brand-strong); border-color:var(--brand); }
+  .preset:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+
+  /* ---- alternate forms ---- */
+  .forms { margin-top:30px; }
+  .forms-lead { display:flex; align-items:baseline; gap:10px; margin:0 0 14px; }
+  .forms-lead h2 { margin:0; font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; }
+  .forms-lead span { font-size:12.5px; color:var(--muted); }
+  .form-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:760px){ .form-grid { grid-template-columns:1fr; } }
+  .form { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:16px 16px 18px; }
+  .form h3 { margin:0 0 3px; font-size:13.5px; letter-spacing:-.01em; }
+  .form .desc { margin:0 0 15px; font-size:11.5px; color:var(--muted); line-height:1.4; }
+
+  /* segmented bar */
+  .seg { display:flex; gap:3px; height:34px; align-items:flex-end; }
+  .seg i { flex:1; border-radius:2px; background:var(--surface-2); transition:background .5s, opacity .5s; }
+  .seg-scale { display:flex; justify-content:space-between; font-family:var(--mono); font-size:9.5px; color:var(--muted); margin-top:7px; letter-spacing:.04em; }
+
+  /* column */
+  .colwrap { display:flex; align-items:flex-end; gap:14px; height:130px; }
+  .col { position:relative; width:46px; background:var(--surface-2); border-radius:7px; overflow:hidden; height:100%; }
+  .col .cfill { position:absolute; left:0; right:0; bottom:0; height:0; border-radius:7px 7px 0 0; transition:height .7s cubic-bezier(.2,.7,.2,1); }
+  .col-ticks { flex:1; display:flex; flex-direction:column; justify-content:space-between; height:100%; font-family:var(--mono); font-size:9.5px; color:var(--muted); padding:1px 0; }
+  .col-ticks span { position:relative; }
+  .col-cap { font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:9px; font-variant-numeric:tabular-nums; }
+
+  /* split bar */
+  .split { height:34px; border-radius:8px; overflow:hidden; display:flex; }
+  .split i { height:100%; transition:width .7s cubic-bezier(.2,.7,.2,1); }
+  .split-key { display:flex; flex-wrap:wrap; gap:10px 14px; margin-top:11px; }
+  .split-key span { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+  .split-key .k { width:9px; height:9px; border-radius:3px; }
+  .split-key b { color:var(--ink); font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:600; }
+
+  /* ---- provenance ---- */
+  .foot { margin-top:26px; font-size:12px; color:var(--muted); line-height:1.6; }
+  .foot b { color:var(--ink); }
+  .disclaimer { margin-top:12px; font-family:var(--mono); font-size:11px; letter-spacing:.02em; color:var(--bd); background:color-mix(in srgb,var(--bd) 9%,transparent); border:1px dashed color-mix(in srgb,var(--bd) 45%,var(--line)); border-radius:9px; padding:11px 14px; line-height:1.55; }
+
+  @media (prefers-reduced-motion: reduce){
+    .brow .fill,.col .cfill,.split i,.seg i { transition:none; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="lockup">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <rect x="3"  y="14" width="3.4" height="15" rx="1.4" fill="#5B54C9"/>
+          <rect x="8.2" y="7"  width="3.4" height="22" rx="1.4" fill="#35B7AE"/>
+          <rect x="13.4" y="18" width="3.4" height="11" rx="1.4" fill="#BE8218"/>
+          <rect x="18.6" y="10" width="3.4" height="19" rx="1.4" fill="#2E9E6B"/>
+          <rect x="23.8" y="16" width="3.4" height="13" rx="1.4" fill="#35B7AE"/>
+        </svg>
+      </div>
+      <div class="wordmark">
+        <div class="name">Vawter<span class="t"> Test</span></div>
+        <div class="tag">SZ Meter · concept · Neuromind Institute</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a class="nav-link" href="index.html">← Demo</a>
+      <a class="nav-link" href="machine.html">Machine illustration</a>
+      <button class="theme-toggle" id="themeBtn" type="button">Theme</button>
+    </div>
+  </div>
+
+  <header class="hero">
+    <h1>The SZ Meter reads one number off the blood draw.</h1>
+    <p>
+      From the 18-gene signature, the classifier returns a <b>schizophrenia probability</b>. The meter
+      is where a clinician reads it: the needle rises through a scale that is green where the sample looks
+      like a healthy control, gold through the bipolar-overlap zone, and indigo where it is
+      <b>consistent with schizophrenia</b>. Colour and position carry the same call.
+    </p>
+  </header>
+
+  <!-- PRIMARY INSTRUMENT -->
+  <section class="stage" aria-labelledby="stage-h">
+    <div class="stage-head">
+      <h2 id="stage-h">SZ Meter</h2>
+      <div class="specimen"><span class="dot"></span>Specimen VT-4471 · drawn 08:42</div>
+    </div>
+    <div class="dial-body">
+      <div class="gauge-col">
+        <div class="gauge-holder">
+          <canvas id="gauge" aria-hidden="true"></canvas>
+          <div class="gauge-read">
+            <div class="val" id="gVal" role="status" aria-live="polite">0<span class="pct">%</span></div>
+            <div class="cap">P(schizophrenia)</div>
+            <div class="band-pill" id="gBand"><span class="bdot"></span><span id="gBandTxt">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="readout">
+        <h3>Three-way differential</h3>
+        <div class="breakdown" id="breakdown"></div>
+
+        <div class="presets" role="group" aria-label="Load sample signature">
+          <span class="lbl">Load a sample signature</span>
+          <button class="preset" type="button" data-k="nc">Control</button>
+          <button class="preset" type="button" data-k="bd">Bipolar I</button>
+          <button class="preset" type="button" data-k="amb">Indeterminate</button>
+          <button class="preset" type="button" data-k="sz">Schizophrenia</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALTERNATE FORMS -->
+  <section class="forms" aria-labelledby="forms-h">
+    <div class="forms-lead">
+      <h2 id="forms-h">Other forms of the same reading</h2>
+      <span>every card below tracks the meter above</span>
+    </div>
+    <div class="form-grid">
+      <div class="form">
+        <h3>Segmented bar</h3>
+        <p class="desc">Twenty steps light up to the reading. Reads well small, e.g. in a results row.</p>
+        <div class="seg" id="seg" aria-hidden="true"></div>
+        <div class="seg-scale"><span>0</span><span>50</span><span>100%</span></div>
+      </div>
+      <div class="form">
+        <h3>Column</h3>
+        <p class="desc">A vertical fill against a fixed scale. Familiar as a lab gauge.</p>
+        <div class="colwrap">
+          <div class="col"><div class="cfill" id="colFill"></div></div>
+          <div class="col-ticks"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>
+        </div>
+        <div class="col-cap" id="colCap">— % P(SZ)</div>
+      </div>
+      <div class="form">
+        <h3>Differential split</h3>
+        <p class="desc">All three classes in one bar. Shows what the SZ share is measured against.</p>
+        <div class="split" id="split" aria-hidden="true">
+          <i data-c="sz"></i><i data-c="bd"></i><i data-c="nc"></i>
+        </div>
+        <div class="split-key">
+          <span><i class="k" style="background:var(--sz)"></i>SZ <b id="kSz">—</b></span>
+          <span><i class="k" style="background:var(--bd)"></i>BD <b id="kBd">—</b></span>
+          <span><i class="k" style="background:var(--nc)"></i>Control <b id="kNc">—</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p>
+      The reading is <b>P(schizophrenia)</b> from the differential classifier described in Vawter et al.,
+      <i>“Exon Array Biomarkers for the Differential Diagnosis of Schizophrenia and Bipolar Disorder”</i>
+      (Molecular Neuropsychiatry, 2018). Bands shown: <b>0–33% unlikely</b>, <b>33–66% indeterminate</b>,
+      <b>66–100% consistent with schizophrenia</b>. UC Case 2018-522-0 · Tech ID 30159.
+    </p>
+    <p class="disclaimer">
+      CONCEPT — a visual study of the meter, not a validated readout. The needle and the three-way split
+      are illustrative of the display, not clinical output. Band thresholds are placeholders for design review.
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // brand class colours, resolved live so both themes work
+  function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function hexToRgb(h){ h=h.replace("#",""); if(h.length===3){h=h.split("").map(function(x){return x+x;}).join("");} var n=parseInt(h,16); return [n>>16&255,n>>8&255,n&255]; }
+  function toHex(n){ return cssv(n); } // vars hold hex in both themes
+
+  // scale stops for the gauge: green -> gold -> indigo
+  function scaleColor(t){
+    var g=hexToRgb(cssv("--nc")), a=hexToRgb(cssv("--bd")), i=hexToRgb(cssv("--sz"));
+    var c1,c2,u;
+    if(t<0.5){ c1=g; c2=a; u=t/0.5; } else { c1=a; c2=i; u=(t-0.5)/0.5; }
+    var r=c1.map(function(v,k){ return Math.round(v+(c2[k]-v)*u); });
+    return "rgb("+r[0]+","+r[1]+","+r[2]+")";
+  }
+
+  // sample signatures: P(sz), P(bd), P(control)
+  var SAMPLES = {
+    nc:  { sz:0.06, bd:0.10, nc:0.84, label:"Control" },
+    bd:  { sz:0.14, bd:0.79, nc:0.07, label:"Bipolar I" },
+    amb: { sz:0.44, bd:0.39, nc:0.17, label:"Indeterminate" },
+    sz:  { sz:0.91, bd:0.06, nc:0.03, label:"Schizophrenia" }
+  };
+  var BANDS = [
+    { max:0.33, txt:"Unlikely",                     colTok:"--nc" },
+    { max:0.66, txt:"Indeterminate",                colTok:"--bd" },
+    { max:1.01, txt:"Consistent with schizophrenia",colTok:"--sz" }
+  ];
+  function bandFor(f){ for(var i=0;i<BANDS.length;i++){ if(f<BANDS[i].max) return BANDS[i]; } return BANDS[2]; }
+
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- gauge canvas ----------
+  var cv = document.getElementById("gauge");
+  var ctx = cv.getContext("2d");
+  var W=0, H=0, cx=0, cy=0, R=0, lw=0;
+
+  function sizeCanvas(){
+    var dpr = Math.min(window.devicePixelRatio||1, 2.5);
+    var rect = cv.getBoundingClientRect();
+    W=rect.width; H=rect.height;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    R = Math.min(W*0.46, H*0.82);
+    lw = Math.max(14, R*0.15);
+    cx = W/2;
+    cy = H*0.9;
+  }
+
+  var START=Math.PI, SPAN=Math.PI; // 180deg top semicircle, left->right
+
+  function drawGauge(frac){
+    ctx.clearRect(0,0,W,H);
+    // scale arc, drawn as many coloured segments
+    var N=90;
+    ctx.lineCap="butt";
+    ctx.lineWidth=lw;
+    for(var i=0;i<N;i++){
+      var t0=i/N, t1=(i+1)/N;
+      var a0=START+t0*SPAN, a1=START+t1*SPAN+0.004;
+      var tMid=(t0+t1)/2;
+      var lit = tMid<=frac+0.0001;
+      ctx.strokeStyle=scaleColor(tMid);
+      ctx.globalAlpha = lit ? 1 : 0.22;
+      ctx.beginPath();
+      ctx.arc(cx,cy,R,a0,a1);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+
+    // ticks at 0/25/50/75/100
+    ctx.lineCap="round";
+    for(var k=0;k<=4;k++){
+      var tt=k/4, ang=START+tt*SPAN;
+      var r1=R+lw*0.5+3, r2=R+lw*0.5+ (k%2===0?11:7);
+      ctx.strokeStyle=cssv("--muted");
+      ctx.globalAlpha=k%2===0?0.85:0.5;
+      ctx.lineWidth=k%2===0?2:1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(ang)*r1, cy+Math.sin(ang)*r1);
+      ctx.lineTo(cx+Math.cos(ang)*r2, cy+Math.sin(ang)*r2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+
+    // needle
+    var na=START+frac*SPAN;
+    var nColor=scaleColor(frac);
+    var tipR=R-lw*0.5-2;
+    var baseW=Math.max(5,R*0.045);
+    var bx=cx, by=cy;
+    var perp=na+Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(bx+Math.cos(perp)*baseW, by+Math.sin(perp)*baseW);
+    ctx.lineTo(cx+Math.cos(na)*tipR, cy+Math.sin(na)*tipR);
+    ctx.lineTo(bx-Math.cos(perp)*baseW, by-Math.sin(perp)*baseW);
+    ctx.closePath();
+    ctx.fillStyle=nColor;
+    ctx.fill();
+
+    // marker dot on the arc at the value
+    ctx.beginPath();
+    ctx.arc(cx+Math.cos(na)*R, cy+Math.sin(na)*R, lw*0.34, 0, Math.PI*2);
+    ctx.fillStyle=cssv("--surface");
+    ctx.fill();
+    ctx.lineWidth=Math.max(2.5,lw*0.16);
+    ctx.strokeStyle=nColor;
+    ctx.stroke();
+
+    // hub
+    ctx.beginPath();
+    ctx.arc(cx,cy,baseW+3,0,Math.PI*2);
+    ctx.fillStyle=cssv("--surface");
+    ctx.fill();
+    ctx.lineWidth=2.5;
+    ctx.strokeStyle=nColor;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx,cy,baseW*0.4,0,Math.PI*2);
+    ctx.fillStyle=nColor;
+    ctx.fill();
+  }
+
+  // ---------- readout wiring ----------
+  var gVal=document.getElementById("gVal");
+  var gBand=document.getElementById("gBand");
+  var gBandTxt=document.getElementById("gBandTxt");
+
+  var CLASSES=[
+    { key:"sz", name:"Schizophrenia", tok:"--sz" },
+    { key:"bd", name:"Bipolar I",     tok:"--bd" },
+    { key:"nc", name:"Healthy control", tok:"--nc" }
+  ];
+  var bdEl=document.getElementById("breakdown");
+  var rows={};
+  CLASSES.forEach(function(c){
+    var row=document.createElement("div"); row.className="brow";
+    row.innerHTML='<div class="top"><span class="nm"><span class="cd" style="background:var('+c.tok+')"></span>'+c.name+'</span><span class="pv" data-pv></span></div><div class="track"><span class="fill" style="background:var('+c.tok+')"></span></div>';
+    bdEl.appendChild(row);
+    rows[c.key]={ pv:row.querySelector("[data-pv]"), fill:row.querySelector(".fill") };
+  });
+
+  // segmented bar
+  var segEl=document.getElementById("seg"); var SEGN=20;
+  for(var s=0;s<SEGN;s++){ var b=document.createElement("i"); segEl.appendChild(b); }
+  var segCells=segEl.querySelectorAll("i");
+
+  var colFill=document.getElementById("colFill");
+  var colCap=document.getElementById("colCap");
+  var splitCells=document.querySelectorAll("#split i");
+  var kEls={ sz:document.getElementById("kSz"), bd:document.getElementById("kBd"), nc:document.getElementById("kNc") };
+
+  function paintStatic(sample, frac){
+    var band=bandFor(frac);
+    // breakdown bars
+    CLASSES.forEach(function(c){
+      var p=sample[c.key];
+      rows[c.key].pv.textContent=Math.round(p*100)+"%";
+      rows[c.key].fill.style.width=(p*100)+"%";
+    });
+    // band pill
+    var col=cssv(band.colTok);
+    gBandTxt.textContent=band.txt;
+    gBand.style.color=col;
+    gBand.style.borderColor=col;
+    gBand.style.background="color-mix(in srgb,"+col+" 12%,transparent)";
+    gBand.querySelector(".bdot").style.background=col;
+    // segmented
+    var litCount=Math.round(frac*SEGN);
+    segCells.forEach(function(cell,idx){
+      var t=(idx+0.5)/SEGN;
+      if(idx<litCount){ cell.style.background=scaleColor(t); cell.style.opacity="1"; cell.style.height="100%"; }
+      else { cell.style.background=cssv("--surface-2"); cell.style.opacity="1"; cell.style.height=(55+t*0)+"%"; }
+      cell.style.height="100%";
+    });
+    // column
+    colFill.style.height=(frac*100)+"%";
+    colFill.style.background="linear-gradient(to top,"+cssv("--nc")+","+cssv("--bd")+" 55%,"+cssv("--sz")+")";
+    colCap.textContent=Math.round(frac*100)+"% P(SZ)";
+    // split
+    splitCells.forEach(function(cell){
+      var c=cell.getAttribute("data-c");
+      cell.style.width=(sample[c]*100)+"%";
+      cell.style.background=cssv("--"+c);
+    });
+    kEls.sz.textContent=Math.round(sample.sz*100)+"%";
+    kEls.bd.textContent=Math.round(sample.bd*100)+"%";
+    kEls.nc.textContent=Math.round(sample.nc*100)+"%";
+  }
+
+  // ---------- animate needle + number ----------
+  var cur=0, raf=null;
+  function animateTo(frac){
+    if(raf) cancelAnimationFrame(raf);
+    if(reduce){ cur=frac; drawGauge(cur); gVal.innerHTML=Math.round(cur*100)+'<span class="pct">%</span>'; return; }
+    var from=cur, start=null, dur=900;
+    function step(ts){
+      if(start===null) start=ts;
+      var p=Math.min(1,(ts-start)/dur);
+      var e=1-Math.pow(1-p,3); // easeOutCubic
+      cur=from+(frac-from)*e;
+      drawGauge(cur);
+      gVal.innerHTML=Math.round(cur*100)+'<span class="pct">%</span>';
+      if(p<1) raf=requestAnimationFrame(step); else cur=frac;
+    }
+    raf=requestAnimationFrame(step);
+  }
+
+  var buttons=document.querySelectorAll(".preset");
+  function select(key){
+    var sample=SAMPLES[key];
+    buttons.forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.k===key?"true":"false"); });
+    paintStatic(sample, sample.sz);
+    animateTo(sample.sz);
+  }
+  buttons.forEach(function(b){ b.addEventListener("click", function(){ select(b.dataset.k); }); });
+
+  // theme toggle
+  document.getElementById("themeBtn").addEventListener("click", function(){
+    var root=document.documentElement;
+    var isDark = (root.getAttribute("data-theme")||
+      (window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark";
+    root.setAttribute("data-theme", isDark?"light":"dark");
+    // repaint with resolved colours for the new theme
+    drawGauge(cur);
+    var pressed=document.querySelector('.preset[aria-pressed="true"]');
+    if(pressed) paintStatic(SAMPLES[pressed.dataset.k], SAMPLES[pressed.dataset.k].sz);
+  });
+
+  // init
+  function boot(){
+    sizeCanvas();
+    drawGauge(0);
+    select("sz"); // open on a strong reading so the needle sweeps up
+  }
+  window.addEventListener("resize", function(){ sizeCanvas(); drawGauge(cur); });
+  boot();
+})();
+</script>

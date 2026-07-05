@@ -1,0 +1,452 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vawter Test Analyzer — device concept</title>
+<style>
+  :root {
+    --bg:#EEF2F1; --surface:#FFFFFF; --surface-2:#F4F7F6; --ink:#14201E; --ink-soft:#33433F;
+    --muted:#5A6B67; --line:#DBE3E1;
+    --brand:#0E8C86; --brand-strong:#0B6E69; --brand-wash:#E3F0EE;
+    --sz:#5B54C9; --bd:#BE8218; --nc:#2E9E6B;
+    --shadow:0 1px 2px rgba(20,32,30,.05), 0 10px 26px -14px rgba(20,32,30,.20);
+    --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    /* device tones */
+    --dev-top:#FCFEFD; --dev-front:#EAEEED; --dev-front-2:#DCE3E1; --dev-side:#CDD6D3;
+    --dev-edge:#BCC7C4; --dev-groove:#C6CFCC;
+    --platform:rgba(20,32,30,.16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0C1211; --surface:#131E1C; --surface-2:#17231F; --ink:#E7EEEC; --ink-soft:#C4D0CD;
+      --muted:#8FA09B; --line:#233230;
+      --brand:#35B7AE; --brand-strong:#5DD2C9; --brand-wash:#123430;
+      --sz:#938CF0; --bd:#E0B24E; --nc:#47C489;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.7);
+      --dev-top:#24352F; --dev-front:#1B2825; --dev-front-2:#141F1D; --dev-side:#101917;
+      --dev-edge:#2E403C; --dev-groove:#0E1614;
+      --platform:rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="light"]{--bg:#EEF2F1;--surface:#FFFFFF;--surface-2:#F4F7F6;--ink:#14201E;--ink-soft:#33433F;--muted:#5A6B67;--line:#DBE3E1;--brand:#0E8C86;--brand-strong:#0B6E69;--brand-wash:#E3F0EE;--sz:#5B54C9;--bd:#BE8218;--nc:#2E9E6B;--shadow:0 1px 2px rgba(20,32,30,.05),0 10px 26px -14px rgba(20,32,30,.20);--dev-top:#FCFEFD;--dev-front:#EAEEED;--dev-front-2:#DCE3E1;--dev-side:#CDD6D3;--dev-edge:#BCC7C4;--dev-groove:#C6CFCC;--platform:rgba(20,32,30,.16);}
+  :root[data-theme="dark"]{--bg:#0C1211;--surface:#131E1C;--surface-2:#17231F;--ink:#E7EEEC;--ink-soft:#C4D0CD;--muted:#8FA09B;--line:#233230;--brand:#35B7AE;--brand-strong:#5DD2C9;--brand-wash:#123430;--sz:#938CF0;--bd:#E0B24E;--nc:#47C489;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -16px rgba(0,0,0,.7);--dev-top:#24352F;--dev-front:#1B2825;--dev-front-2:#141F1D;--dev-side:#101917;--dev-edge:#2E403C;--dev-groove:#0E1614;--platform:rgba(0,0,0,.55);}
+
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1060px; margin:0 auto; padding:26px 20px 64px; }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .lockup { display:flex; align-items:center; gap:13px; }
+  .mark { width:44px; height:44px; border-radius:12px; flex:none; background:var(--ink); display:grid; place-items:center; box-shadow:var(--shadow); }
+  @media (prefers-color-scheme: dark){ .mark{ background:#0A100F; } }
+  :root[data-theme="dark"] .mark{ background:#0A100F; }
+  .mark svg { width:28px; height:28px; }
+  .wordmark .name { font-size:21px; font-weight:680; letter-spacing:-.015em; line-height:1; }
+  .wordmark .name .t { font-weight:400; color:var(--muted); }
+  .wordmark .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--brand-strong); margin-top:5px; }
+  .theme-toggle { font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; background:var(--surface); color:var(--muted); border:1px solid var(--line); padding:7px 12px; border-radius:8px; cursor:pointer; }
+  .theme-toggle:hover { color:var(--ink); border-color:var(--brand); }
+  .topbar-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .nav-link { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; background:var(--surface); color:var(--muted); border:1px solid var(--line); padding:7px 12px; border-radius:8px; white-space:nowrap; }
+  .nav-link:hover { color:var(--ink); border-color:var(--brand); }
+
+
+  .hero { margin:24px 0 20px; }
+  .hero h1 { font-size:clamp(21px,3vw,30px); letter-spacing:-.02em; margin:0 0 9px; max-width:24ch; text-wrap:balance; line-height:1.12; }
+  .hero p { margin:0; max-width:62ch; color:var(--ink-soft); font-size:15px; }
+  .hero p b { color:var(--ink); font-weight:600; }
+
+  .studio { margin-top:8px; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 12%, color-mix(in srgb,var(--brand) 7%,var(--surface)) 0%, var(--surface) 55%, var(--surface-2) 100%); }
+  .studio-head { display:flex; align-items:center; gap:10px; padding:13px 20px; border-bottom:1px solid var(--line); background:color-mix(in srgb,var(--surface-2) 70%, transparent); }
+  .studio-head h2 { margin:0; font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; }
+  .studio-head .mono { margin-left:auto; font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--muted); }
+  .figwrap { overflow-x:auto; padding:14px 12px 6px; }
+  .figwrap svg { display:block; width:100%; min-width:620px; height:auto; }
+
+  .led-core { animation:pulse 2.4s ease-in-out infinite; transform-origin:center; }
+  .live-dot { animation:pulse 2.4s ease-in-out infinite; transform-origin:center; }
+  @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+
+  .cols { margin-top:20px; display:grid; grid-template-columns:1.05fr .95fr; gap:16px; align-items:stretch; }
+  @media (max-width:760px){ .cols { grid-template-columns:1fr; } }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:16px 18px 18px; }
+  .card h3 { margin:0 0 4px; font-size:13.5px; letter-spacing:-.01em; }
+  .card .sub { margin:0 0 12px; font-size:11.5px; color:var(--muted); line-height:1.4; }
+  .card .cartfig { overflow-x:auto; }
+  .card .cartfig svg { display:block; width:100%; min-width:300px; height:auto; }
+
+  .spec { list-style:none; margin:0; padding:0; }
+  .spec li { display:grid; grid-template-columns:130px 1fr; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:12.5px; }
+  .spec li:last-child { border-bottom:none; }
+  .spec .k { font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+  .spec .v { color:var(--ink-soft); }
+  .spec .v b { color:var(--ink); font-weight:600; }
+  .spec .v .ph { font-family:var(--mono); font-size:10px; color:var(--bd); letter-spacing:.04em; }
+
+  .foot { margin-top:26px; font-size:12px; color:var(--muted); line-height:1.6; }
+  .foot b { color:var(--ink); }
+  .disclaimer { margin-top:12px; font-family:var(--mono); font-size:11px; letter-spacing:.02em; color:var(--bd); background:color-mix(in srgb,var(--bd) 9%,transparent); border:1px dashed color-mix(in srgb,var(--bd) 45%,var(--line)); border-radius:9px; padding:11px 14px; line-height:1.55; }
+
+  @media (prefers-reduced-motion: reduce){ .led-core,.live-dot { animation:none; } }
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="lockup">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <rect x="3" y="14" width="3.4" height="15" rx="1.4" fill="#5B54C9"/>
+          <rect x="8.2" y="7" width="3.4" height="22" rx="1.4" fill="#35B7AE"/>
+          <rect x="13.4" y="18" width="3.4" height="11" rx="1.4" fill="#BE8218"/>
+          <rect x="18.6" y="10" width="3.4" height="19" rx="1.4" fill="#2E9E6B"/>
+          <rect x="23.8" y="16" width="3.4" height="13" rx="1.4" fill="#35B7AE"/>
+        </svg>
+      </div>
+      <div class="wordmark">
+        <div class="name">Vawter<span class="t"> Test</span></div>
+        <div class="tag">Analyzer · device concept · Neuromind Institute</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a class="nav-link" href="index.html">← Demo</a>
+      <a class="nav-link" href="meter.html">SZ Meter</a>
+      <button class="theme-toggle" id="themeBtn" type="button">Theme</button>
+    </div>
+  </div>
+
+  <header class="hero">
+    <h1>The bench unit that runs the draw and shows the meter.</h1>
+    <p>
+      A benchtop analyzer sized for a clinic lab. A drawn blood tube goes into a <b>single-use cartridge</b>,
+      the cartridge goes in the bay, and one button starts the run. The 18-gene panel is read on board and
+      the result is shown where the clinician stands: the <b>SZ Meter</b>, live on the front screen.
+    </p>
+  </header>
+
+  <section class="studio" aria-labelledby="studio-h">
+    <div class="studio-head">
+      <h2 id="studio-h">Vawter Test Analyzer — VT-1</h2>
+      <span class="mono">industrial-design concept</span>
+    </div>
+    <div class="figwrap">
+      <svg viewBox="0 0 940 600" role="img" aria-label="Illustration of a benchtop molecular diagnostics analyzer with a front touchscreen showing the SZ Meter, a cartridge bay, a status light and a run button, with labelled callouts.">
+        <!-- contact shadow -->
+        <ellipse cx="470" cy="522" rx="248" ry="26" fill="var(--platform)"/>
+
+        <!-- ===== device body ===== -->
+        <!-- top face -->
+        <polygon points="270,140 314,112 694,112 650,140" fill="var(--dev-top)" stroke="var(--dev-edge)" stroke-width="1.5" stroke-linejoin="round"/>
+        <!-- top vents -->
+        <line x1="360" y1="126" x2="628" y2="126" stroke="var(--dev-groove)" stroke-width="2"/>
+        <line x1="372" y1="132" x2="616" y2="132" stroke="var(--dev-groove)" stroke-width="1.5" opacity=".7"/>
+        <!-- right face -->
+        <polygon points="650,140 694,112 694,472 650,500" fill="var(--dev-side)" stroke="var(--dev-edge)" stroke-width="1.5" stroke-linejoin="round"/>
+        <!-- connectivity port on side -->
+        <rect x="668" y="300" width="18" height="12" rx="2" fill="var(--dev-groove)"/>
+        <!-- front face -->
+        <path d="M 270,140 L 650,140 L 650,476 Q 650,500 626,500 L 294,500 Q 270,500 270,476 Z"
+              fill="var(--dev-front)" stroke="var(--dev-edge)" stroke-width="1.6"/>
+        <!-- subtle bottom gradient band on fascia -->
+        <path d="M 270,452 L 650,452 L 650,476 Q 650,500 626,500 L 294,500 Q 270,500 270,476 Z" fill="var(--dev-front-2)" opacity=".55"/>
+
+        <!-- ===== screen ===== -->
+        <rect x="296" y="162" width="328" height="208" rx="16" fill="var(--dev-groove)"/>
+        <rect x="302" y="168" width="316" height="196" rx="12" fill="#0A100F"/>
+        <rect x="302" y="168" width="316" height="196" rx="12" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1.5"/>
+        <!-- screen: header -->
+        <circle class="live-dot" cx="316" cy="192" r="3.4" fill="#47C489"/>
+        <text x="326" y="196" font-family="var(--mono)" font-size="10" letter-spacing="1.2" fill="#8FA09B">VAWTER · SZ METER</text>
+        <text x="610" y="196" text-anchor="end" font-family="var(--mono)" font-size="10" letter-spacing=".6" fill="#8FA09B">VT-4471</text>
+        <!-- screen: gauge (injected) -->
+        <g id="screenGauge"></g>
+        <!-- screen: readout text -->
+        <text x="470" y="256" font-family="var(--mono)" font-size="9.5" letter-spacing=".8" fill="#8FA09B">P(SCHIZOPHRENIA)</text>
+        <text x="470" y="298" font-family="var(--mono)" font-size="38" font-weight="700" letter-spacing="-1" fill="#938CF0">72%</text>
+        <text x="470" y="322" font-family="var(--mono)" font-size="9" letter-spacing=".5" fill="#8FA09B">CONSISTENT WITH</text>
+        <text x="470" y="334" font-family="var(--mono)" font-size="9" letter-spacing=".5" fill="#938CF0">SCHIZOPHRENIA</text>
+        <!-- screen: mini three-way bar -->
+        <g>
+          <rect x="470" y="346" width="93.6" height="8" rx="2" fill="#938CF0"/>
+          <rect x="565.6" y="346" width="24.7" height="8" fill="#E0B24E"/>
+          <rect x="592.3" y="346" width="11.7" height="8" rx="2" fill="#47C489"/>
+        </g>
+
+        <!-- ===== cartridge bay drawer ===== -->
+        <rect x="302" y="384" width="316" height="52" rx="10" fill="var(--dev-front-2)" stroke="var(--dev-edge)" stroke-width="1.4"/>
+        <rect x="316" y="398" width="288" height="6" rx="3" fill="var(--dev-groove)"/>
+        <rect x="440" y="414" width="40" height="9" rx="4.5" fill="var(--dev-groove)"/>
+
+        <!-- ===== controls row ===== -->
+        <!-- status light -->
+        <circle cx="322" cy="470" r="9" fill="var(--dev-groove)"/>
+        <circle class="led-core" cx="322" cy="470" r="5" fill="#47C489"/>
+        <!-- etched wordmark -->
+        <text x="404" y="474" font-family="var(--mono)" font-size="10" letter-spacing="1" fill="var(--muted)">NEUROMIND · VT-1</text>
+        <!-- run button -->
+        <circle cx="600" cy="470" r="16" fill="var(--dev-front)" stroke="var(--brand)" stroke-width="2.5"/>
+        <path d="M 595,463 L 595,477 L 607,470 Z" fill="var(--brand)"/>
+
+        <!-- ===== callouts ===== -->
+        <g font-family="var(--mono)">
+          <!-- touchscreen (left) -->
+          <circle cx="302" cy="214" r="3" fill="var(--brand)"/>
+          <line x1="302" y1="214" x2="252" y2="210" stroke="var(--muted)" stroke-width="1.2" opacity=".55"/>
+          <text x="246" y="207" text-anchor="end" font-size="12" font-weight="700" letter-spacing=".4" fill="var(--ink)">TOUCHSCREEN</text>
+          <text x="246" y="222" text-anchor="end" font-size="10.5" fill="var(--muted)">live SZ Meter readout</text>
+
+          <!-- status light (left) -->
+          <circle cx="322" cy="470" r="3" fill="var(--brand)"/>
+          <line x1="313" y1="470" x2="252" y2="474" stroke="var(--muted)" stroke-width="1.2" opacity=".55"/>
+          <text x="246" y="471" text-anchor="end" font-size="12" font-weight="700" letter-spacing=".4" fill="var(--ink)">STATUS LIGHT</text>
+          <text x="246" y="486" text-anchor="end" font-size="10.5" fill="var(--muted)">idle · running · done</text>
+
+          <!-- cartridge bay (right) -->
+          <circle cx="618" cy="410" r="3" fill="var(--brand)"/>
+          <line x1="618" y1="410" x2="724" y2="400" stroke="var(--muted)" stroke-width="1.2" opacity=".55"/>
+          <text x="732" y="397" font-size="12" font-weight="700" letter-spacing=".4" fill="var(--ink)">CARTRIDGE BAY</text>
+          <text x="732" y="412" font-size="10.5" fill="var(--muted)">one cartridge per run</text>
+
+          <!-- run button (right) -->
+          <circle cx="616" cy="470" r="3" fill="var(--brand)"/>
+          <line x1="616" y1="470" x2="724" y2="474" stroke="var(--muted)" stroke-width="1.2" opacity=".55"/>
+          <text x="732" y="471" font-size="12" font-weight="700" letter-spacing=".4" fill="var(--ink)">RUN</text>
+          <text x="732" y="486" font-size="10.5" fill="var(--muted)">one-touch start</text>
+
+          <!-- connectivity (right, side port) -->
+          <circle cx="686" cy="306" r="3" fill="var(--brand)"/>
+          <line x1="686" y1="306" x2="724" y2="300" stroke="var(--muted)" stroke-width="1.2" opacity=".55"/>
+          <text x="732" y="297" font-size="12" font-weight="700" letter-spacing=".4" fill="var(--ink)">LIS / EMR</text>
+          <text x="732" y="312" font-size="10.5" fill="var(--muted)">result pushed to record</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <section class="studio" aria-labelledby="exp-h" style="margin-top:20px;">
+    <div class="studio-head">
+      <h2 id="exp-h">Exploded view — assembly stack</h2>
+      <span class="mono">7 layers · top to base</span>
+    </div>
+    <div class="figwrap">
+      <svg viewBox="0 0 940 620" role="img" aria-label="Exploded isometric view of the analyzer separated into seven stacked layers: top cover, touchscreen fascia, optical read head, single-use cartridge, thermal stage, mainboard and base chassis, with numbered callouts.">
+        <ellipse cx="412" cy="520" rx="220" ry="22" fill="var(--platform)"/>
+        <g id="exploded"></g>
+      </svg>
+    </div>
+  </section>
+
+  <div class="cols">
+    <div class="card">
+      <h3>The consumable</h3>
+      <p class="sub">A drawn PAXgene tube seats into a single-use cartridge that carries the 18-gene panel. One patient, one cartridge.</p>
+      <div class="cartfig">
+        <svg viewBox="0 0 360 220" role="img" aria-label="Illustration of the single-use cartridge with a blood collection tube seated in its port and a reaction-array window.">
+          <!-- tube -->
+          <g>
+            <rect x="70" y="14" width="26" height="96" rx="12" fill="var(--dev-front)" stroke="var(--dev-edge)" stroke-width="1.4"/>
+            <rect x="70" y="52" width="26" height="58" rx="0" fill="#B23A48" opacity=".85"/>
+            <path d="M 70,98 h26 v12 a13,13 0 0 1 -26,0 Z" fill="#8E2C39"/>
+            <rect x="66" y="8" width="34" height="16" rx="5" fill="var(--brand)"/>
+          </g>
+          <!-- cartridge body -->
+          <rect x="40" y="104" width="286" height="96" rx="14" fill="var(--dev-front)" stroke="var(--dev-edge)" stroke-width="1.6"/>
+          <rect x="40" y="150" width="286" height="50" rx="0" fill="var(--dev-front-2)" opacity=".6"/>
+          <!-- port collar where tube seats -->
+          <ellipse cx="83" cy="106" rx="20" ry="7" fill="var(--dev-side)" stroke="var(--dev-edge)" stroke-width="1.2"/>
+          <!-- reaction window with wells -->
+          <rect x="150" y="120" width="150" height="40" rx="6" fill="#0A100F"/>
+          <g fill="#35B7AE">
+            <circle cx="166" cy="132" r="3.4"/><circle cx="184" cy="132" r="3.4"/><circle cx="202" cy="132" r="3.4"/><circle cx="220" cy="132" r="3.4"/><circle cx="238" cy="132" r="3.4"/><circle cx="256" cy="132" r="3.4"/><circle cx="274" cy="132" r="3.4"/><circle cx="292" cy="132" r="3.4"/>
+          </g>
+          <g fill="#5B54C9">
+            <circle cx="166" cy="148" r="3.4"/><circle cx="184" cy="148" r="3.4"/><circle cx="202" cy="148" r="3.4"/><circle cx="220" cy="148" r="3.4"/><circle cx="238" cy="148" r="3.4"/><circle cx="256" cy="148" r="3.4"/><circle cx="274" cy="148" r="3.4"/><circle cx="292" cy="148" r="3.4"/>
+          </g>
+          <!-- barcode -->
+          <g fill="var(--ink)" opacity=".8">
+            <rect x="58" y="168" width="2" height="22"/><rect x="63" y="168" width="4" height="22"/><rect x="70" y="168" width="2" height="22"/><rect x="75" y="168" width="3" height="22"/><rect x="81" y="168" width="2" height="22"/><rect x="86" y="168" width="4" height="22"/><rect x="93" y="168" width="2" height="22"/><rect x="98" y="168" width="3" height="22"/><rect x="104" y="168" width="2" height="22"/>
+          </g>
+          <!-- callouts -->
+          <g font-family="var(--mono)">
+            <text x="112" y="46" font-size="10.5" font-weight="700" fill="var(--ink)">PAXgene tube</text>
+            <text x="112" y="60" font-size="9.5" fill="var(--muted)">2.5 mL blood</text>
+            <text x="150" y="184" font-size="9.5" fill="var(--muted)">18-gene reaction array</text>
+            <text x="56" y="204" font-size="9" fill="var(--muted)">cartridge ID</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Concept specifications</h3>
+      <p class="sub">Placeholders for design review, not committed figures.</p>
+      <ul class="spec">
+        <li><span class="k">Format</span><span class="v"><b>Benchtop analyzer</b>, single-bay</span></li>
+        <li><span class="k">Footprint</span><span class="v">27 × 33 × 40 cm <span class="ph">placeholder</span></span></li>
+        <li><span class="k">Sample</span><span class="v"><b>2.5 mL</b> peripheral blood (PAXgene)</span></li>
+        <li><span class="k">Consumable</span><span class="v">Single-use <b>18-gene cartridge</b></span></li>
+        <li><span class="k">Time to result</span><span class="v">load-and-walk-away <span class="ph">TBD</span></span></li>
+        <li><span class="k">Readout</span><span class="v">SZ / bipolar I / control + <b>P(SZ)</b></span></li>
+        <li><span class="k">Interface</span><span class="v">10-in touchscreen · one-touch run</span></li>
+        <li><span class="k">Connectivity</span><span class="v">Wi-Fi · LIS / EMR push</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p>
+      The on-screen reading is <b>P(schizophrenia)</b> from the differential classifier in Vawter et al.,
+      <i>“Exon Array Biomarkers for the Differential Diagnosis of Schizophrenia and Bipolar Disorder”</i>
+      (Molecular Neuropsychiatry, 2018). UC Case 2018-522-0 · Tech ID 30159 · developed by Neuromind Institute (501(c)(3)).
+    </p>
+    <p class="disclaimer">
+      CONCEPT — an industrial-design illustration of a proposed instrument, not an existing product. Form, dimensions,
+      run time and cartridge design are placeholders for review. No such device is cleared or for clinical use.
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  // On-screen SZ Meter gauge, drawn as sampled polylines so the arc geometry is exact.
+  var svgNS="http://www.w3.org/2000/svg";
+  var g=document.getElementById("screenGauge");
+  var gx=392, gy=322, gr=62;           // gauge centre + radius within the screen
+  function pt(deg){ var r=deg*Math.PI/180; return [gx+gr*Math.cos(r), gy-gr*Math.sin(r)]; }
+  function arcPath(a1,a2){ // a1>a2 sweeping over the top (180 -> 0)
+    var d="", steps=22;
+    for(var i=0;i<=steps;i++){ var a=a1+(a2-a1)*(i/steps); var p=pt(a); d+=(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)+" "; }
+    return d.trim();
+  }
+  function addPath(d,color,w){ var el=document.createElementNS(svgNS,"path"); el.setAttribute("d",d); el.setAttribute("fill","none"); el.setAttribute("stroke",color); el.setAttribute("stroke-width",w); el.setAttribute("stroke-linecap","round"); g.appendChild(el); }
+
+  // tri-colour scale: green 180..120, gold 120..60, indigo 60..0
+  addPath(arcPath(180,121),"#47C489",9);
+  addPath(arcPath(119,61),"#E0B24E",9);
+  addPath(arcPath(59,0),"#938CF0",9);
+
+  // needle to 72%  ->  angle = 180 - 0.72*180 = 50.4deg (indigo zone)
+  var na=50.4, tip=pt(na), inner=gr-9, ix=gx+inner*Math.cos(na*Math.PI/180), iy=gy-inner*Math.sin(na*Math.PI/180);
+  var needle=document.createElementNS(svgNS,"line");
+  needle.setAttribute("x1",gx); needle.setAttribute("y1",gy);
+  needle.setAttribute("x2",ix.toFixed(1)); needle.setAttribute("y2",iy.toFixed(1));
+  needle.setAttribute("stroke","#938CF0"); needle.setAttribute("stroke-width","3.4"); needle.setAttribute("stroke-linecap","round");
+  g.appendChild(needle);
+  // marker dot on the arc at the value
+  var dot=document.createElementNS(svgNS,"circle");
+  dot.setAttribute("cx",tip[0].toFixed(1)); dot.setAttribute("cy",tip[1].toFixed(1)); dot.setAttribute("r","5");
+  dot.setAttribute("fill","#0A100F"); dot.setAttribute("stroke","#938CF0"); dot.setAttribute("stroke-width","2.4");
+  g.appendChild(dot);
+  // hub
+  var hub=document.createElementNS(svgNS,"circle");
+  hub.setAttribute("cx",gx); hub.setAttribute("cy",gy); hub.setAttribute("r","5"); hub.setAttribute("fill","#938CF0");
+  g.appendChild(hub);
+
+  // theme toggle
+  document.getElementById("themeBtn").addEventListener("click", function(){
+    var root=document.documentElement;
+    var isDark=(root.getAttribute("data-theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark";
+    root.setAttribute("data-theme", isDark?"light":"dark");
+  });
+})();
+
+// ===== exploded assembly view =====
+(function () {
+  "use strict";
+  var svgNS="http://www.w3.org/2000/svg";
+  var root=document.getElementById("exploded");
+  var cx=396, W=290, ddx=64, ddy=40;
+
+  function el(tag,attrs){ var e=document.createElementNS(svgNS,tag); for(var k in attrs){ e.setAttribute(k,attrs[k]); } return e; }
+  function add(tag,attrs,parent){ var e=el(tag,attrs); (parent||root).appendChild(e); return e; }
+  function poly(pts,fill,stroke,parent){ return add("polygon",{points:pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1);}).join(" "),fill:fill,stroke:stroke||"var(--dev-edge)","stroke-width":1.4,"stroke-linejoin":"round"},parent); }
+
+  // isometric slab; returns geometry for decoration + labelling
+  function slab(topY,T,off,faces){
+    off=off||0;
+    var X0=cx-W/2+off, X1=cx+W/2+off;
+    var FL=[X0,topY], FR=[X1,topY], BR=[X1+ddx,topY-ddy], BL=[X0+ddx,topY-ddy];
+    poly([FL,FR,BR,BL], faces.top);                                   // top
+    poly([FR,BR,[X1+ddx,topY-ddy+T],[X1,topY+T]], faces.side);        // right
+    poly([FL,FR,[X1,topY+T],[X0,topY+T]], faces.front);               // front
+    return { X0:X0, X1:X1, topY:topY, T:T, off:off, midY:topY+T/2,
+             FL:FL, FR:FR, BR:BR, BL:BL, botFront:[X0,topY+T] };
+  }
+  var TOP="var(--dev-top)", FRONT="var(--dev-front)", SIDE="var(--dev-side)", F2="var(--dev-front-2)", GRV="var(--dev-groove)";
+
+  // center assembly guides
+  add("line",{x1:cx,y1:36,x2:cx,y2:502,stroke:"var(--muted)","stroke-width":1,"stroke-dasharray":"3 5",opacity:.35});
+  add("line",{x1:cx+ddx,y1:12,x2:cx+ddx,y2:472,stroke:"var(--muted)","stroke-width":1,"stroke-dasharray":"3 5",opacity:.2});
+
+  var LAYERS=[
+    { n:1, y:60,  T:22, kind:"cover",     title:"Top cover & vents",   sub:"housing, airflow" },
+    { n:2, y:124, T:40, kind:"fascia",    title:"Touchscreen fascia",  sub:"10-in display · SZ Meter" },
+    { n:3, y:206, T:26, kind:"optical",   title:"Optical read head",   sub:"detector + excitation" },
+    { n:4, y:280, T:14, kind:"cartridge", title:"Single-use cartridge",sub:"18-gene panel · seats into bay", off:46 },
+    { n:5, y:326, T:26, kind:"stage",     title:"Thermal stage",       sub:"sample bay + heater" },
+    { n:6, y:396, T:12, kind:"board",     title:"Mainboard",           sub:"on-board classifier" },
+    { n:7, y:452, T:44, kind:"base",      title:"Base chassis & power",sub:"PSU, ports, feet" }
+  ];
+
+  LAYERS.forEach(function(L){
+    var s;
+    if(L.kind==="cartridge"){
+      s=slab(L.y,L.T,L.off,{top:F2,front:F2,side:GRV});
+      // blood band on front
+      add("rect",{x:s.X0+8,y:L.y+3,width:W-16,height:L.T-6,rx:2,fill:"#B23A48",opacity:.8});
+      // wells on top face (two staggered rows)
+      for(var i=0;i<8;i++){
+        var t=(i+0.5)/8;
+        var tx=s.X0+ddx*t*0.6 + (W*0.15) + i*((W*0.7)/8), ty=L.y-ddy*0.35;
+        add("circle",{cx:s.X0+ddx*0.4 + (W*0.12)+ i*(W*0.7/8), cy:L.y-ddy*0.4, r:2.4, fill:"#35B7AE"});
+      }
+      // insertion arrow toward the bay below
+      var ax1=cx+L.off, ay1=L.y+L.T+4, ax2=cx+6, ay2=326-6;
+      add("path",{d:"M "+ax1+" "+ay1+" C "+(ax1-4)+" "+(ay1+18)+" "+(ax2+18)+" "+(ay2-16)+" "+ax2+" "+ay2, fill:"none", stroke:"var(--brand)","stroke-width":1.6,"stroke-dasharray":"4 4"});
+      poly([[ax2,ay2],[ax2-5,ay2-8],[ax2+6,ay2-6]], "var(--brand)","var(--brand)");
+    } else if(L.kind==="board"){
+      s=slab(L.y,L.T,0,{top:"#1c6b52",front:"#124a39",side:"#0d3a2d"});
+      // chips + traces on the top face
+      [-70,-20,34].forEach(function(dx,idx){
+        add("rect",{x:cx+dx, y:L.y-12-idx*2, width:26, height:14, rx:2, fill:"#0d3a2d",stroke:"#2c8f6f","stroke-width":1});
+      });
+      add("line",{x1:cx-80,y1:L.y-4,x2:cx+70,y2:L.y-4,stroke:"#39b48a","stroke-width":1,opacity:.7});
+    } else {
+      s=slab(L.y,L.T,0,{top:TOP,front:FRONT,side:SIDE});
+    }
+
+    if(L.kind==="cover"){
+      for(var v=0;v<4;v++){ add("line",{x1:s.X0+40+ddx*0.25, y1:L.y-6-v*5, x2:s.X1-40+ddx*0.25, y2:L.y-6-v*5, stroke:GRV,"stroke-width":1.5,opacity:.8}); }
+    }
+    if(L.kind==="fascia"){
+      var scrW=W-56;
+      add("rect",{x:s.X0+28,y:L.y+7,width:scrW,height:L.T-14,rx:6,fill:"#0A100F"});
+      add("circle",{cx:s.X0+28+18,cy:L.y+L.T/2,r:6,fill:"none",stroke:"#938CF0","stroke-width":2});
+      add("rect",{x:s.X0+28+34,y:L.y+L.T/2-4,width:60,height:3,rx:1.5,fill:"#8FA09B"});
+      add("rect",{x:s.X0+28+34,y:L.y+L.T/2+2,width:38,height:3,rx:1.5,fill:"#47C489"});
+    }
+    if(L.kind==="optical"){
+      add("circle",{cx:cx,cy:L.y+L.T/2,r:L.T*0.34,fill:GRV,stroke:"var(--brand)","stroke-width":2.2});
+      add("circle",{cx:cx,cy:L.y+L.T/2,r:L.T*0.15,fill:"var(--brand)"});
+    }
+    if(L.kind==="stage"){
+      // recessed bay on the top face where the cartridge lands
+      var rx0=s.X0+ (W*0.28)+ddx*0.3, ry0=L.y-ddy*0.55;
+      poly([[rx0,ry0],[rx0+W*0.5,ry0],[rx0+W*0.5+ddx*0.4,ry0-ddy*0.4],[rx0+ddx*0.4,ry0-ddy*0.4]], GRV, "var(--dev-edge)");
+    }
+    if(L.kind==="base"){
+      add("rect",{x:s.X0+22,y:L.y+12,width:30,height:16,rx:2,fill:GRV});          // power inlet
+      for(var b=0;b<5;b++){ add("line",{x1:s.X1-24-b*7,y1:L.y+10,x2:s.X1-24-b*7,y2:L.y+L.T-10,stroke:GRV,"stroke-width":2,opacity:.7}); } // vents
+    }
+
+    // numbered callout (right side)
+    var by=s.midY, bx=724, tx=s.X1+ (L.off||0)*0.2 + ddx*0.4;
+    add("line",{x1:Math.min(tx, s.X1+ddx-6),y1:by,x2:bx-14,y2:by,stroke:"var(--muted)","stroke-width":1.1,opacity:.5});
+    add("circle",{cx:bx,cy:by,r:11,fill:"var(--brand)"});
+    var num=add("text",{x:bx,y:by+4,"text-anchor":"middle","font-family":"var(--mono)","font-size":12,"font-weight":700,fill:"#fff"}); num.textContent=L.n;
+    var t1=add("text",{x:bx+20,y:by-3,"font-family":"var(--mono)","font-size":12,"font-weight":700,fill:"var(--ink)"}); t1.textContent=L.title;
+    var t2=add("text",{x:bx+20,y:by+12,"font-family":"var(--mono)","font-size":10,fill:"var(--muted)"}); t2.textContent=L.sub;
+  });
+})();
+</script>

@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Vawter Test — Differential Psychiatric Diagnosis</title>
 <style>
   :root {
@@ -48,7 +51,10 @@
   .wordmark .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--brand-strong); margin-top:5px; }
   .theme-toggle { font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; background:var(--surface); color:var(--muted); border:1px solid var(--line); padding:7px 12px; border-radius:8px; cursor:pointer; }
   .theme-toggle:hover { color:var(--ink); border-color:var(--brand); }
-  .topbar-actions { display:flex; align-items:center; gap:8px; }
+  .topbar-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .nav-link { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; background:var(--surface); color:var(--muted); border:1px solid var(--line); padding:7px 12px; border-radius:8px; white-space:nowrap; }
+  .nav-link:hover { color:var(--ink); border-color:var(--brand); }
+
   .download-btn { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; background:var(--brand); color:#fff; border:1px solid var(--brand); padding:7px 12px; border-radius:8px; white-space:nowrap; }
   .download-btn:hover { background:var(--brand-strong); border-color:var(--brand-strong); }
   .download-btn svg { width:13px; height:13px; }
@@ -148,6 +154,29 @@
   .provenance b { color:var(--ink); }
   .disclaimer { margin-top:12px; font-family:var(--mono); font-size:11px; letter-spacing:.02em; color:var(--bd); background:color-mix(in srgb,var(--bd) 9%,transparent); border:1px dashed color-mix(in srgb,var(--bd) 45%,var(--line)); border-radius:9px; padding:11px 14px; line-height:1.55; }
 
+  /* ---------- How-to workflow strip ---------- */
+  .workflow { margin:22px 0 24px; background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .workflow-head { display:flex; align-items:center; gap:10px; padding:13px 18px; border-bottom:1px solid var(--line); background:var(--brand-wash); }
+  .workflow-head .tick { width:22px; height:22px; border-radius:50%; flex:none; background:var(--brand); display:grid; place-items:center; }
+  .workflow-head .tick svg { width:13px; height:13px; color:#fff; }
+  .workflow-head h2 { margin:0; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--brand-strong); }
+  .workflow-head .sub { margin-left:auto; font-family:var(--mono); font-size:11px; letter-spacing:.03em; color:var(--muted); }
+  .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
+  @media (max-width:720px){ .steps { grid-template-columns:1fr 1fr; } }
+  @media (max-width:420px){ .steps { grid-template-columns:1fr; } }
+  .step { padding:15px 18px; border-right:1px solid var(--line); border-top:1px solid var(--line); }
+  .step:first-child { border-top:none; }
+  @media (min-width:721px){ .step { border-top:none; } .step:nth-child(4){ border-right:none; } }
+  @media (max-width:720px) and (min-width:421px){ .step:nth-child(-n+2){ border-top:none; } .step:nth-child(2n){ border-right:none; } }
+  @media (max-width:420px){ .step { border-right:none; } }
+  .step .num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:7px; font-family:var(--mono); font-size:12px; font-weight:600; margin-bottom:9px; }
+  .step.done .num { background:var(--brand); color:#fff; }
+  .step .num.pending { background:var(--surface-2); color:var(--muted); border:1px solid var(--line); }
+  .step h3 { margin:0 0 4px; font-size:13px; letter-spacing:-.01em; }
+  .step p { margin:0; font-size:12px; color:var(--muted); line-height:1.45; }
+  .step p b { color:var(--ink-soft); font-weight:600; }
+  .step.done h3 { color:var(--brand-strong); }
+
   @media (prefers-reduced-motion: reduce){ .analyzing .scan{ animation:none; } .cls .fill{ transition:none; } }
 </style>
 
@@ -174,6 +203,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
         Licensing deck
       </a>
+      <a class="nav-link" href="machine.html">Machine illustration</a>
+      <a class="nav-link" href="meter.html">SZ Meter</a>
       <button class="theme-toggle" id="themeBtn" type="button">Theme</button>
     </div>
   </div>
@@ -186,6 +217,38 @@
       readout. Enter relative expression per gene, or load a sample signature, then classify.
     </p>
   </header>
+
+  <section class="workflow" aria-labelledby="workflow-h">
+    <div class="workflow-head">
+      <span class="tick" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </span>
+      <h2 id="workflow-h">Blood drawn — run the sample</h2>
+      <span class="sub">specimen received</span>
+    </div>
+    <div class="steps">
+      <div class="step done">
+        <span class="num">1</span>
+        <h3>Blood is drawn</h3>
+        <p>One <b>2.5 mL PAXgene tube</b> of peripheral blood is collected from the patient. No fasting, no imaging, no observation window.</p>
+      </div>
+      <div class="step">
+        <span class="num pending">2</span>
+        <h3>Load the signature</h3>
+        <p>The lab profiles the <b>18-gene panel</b> and returns log₂ fold-changes. Enter them at right, or tap a <b>sample signature</b> to demo.</p>
+      </div>
+      <div class="step">
+        <span class="num pending">3</span>
+        <h3>Classify</h3>
+        <p>Press <b>Classify signature</b>. The panel is scored against the schizophrenia, bipolar I, and control templates.</p>
+      </div>
+      <div class="step">
+        <span class="num pending">4</span>
+        <h3>Read the call</h3>
+        <p>Get a <b>three-way differential</b> with per-class probability and the genes driving the result.</p>
+      </div>
+    </div>
+  </section>
 
   <div class="console">
     <!-- INTAKE -->
